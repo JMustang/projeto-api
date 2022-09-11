@@ -7,7 +7,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Projeto API')
-    .setDescription('A api made javascript using the Nestjs framework')
+    .setDescription('A api made with javascript using the Nestjs framework')
     .setVersion('1.0.0')
     .addTag('api')
     .build();
