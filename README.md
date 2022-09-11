@@ -5,69 +5,194 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Fonte: [Nestjs](https://docs.nestjs.com/recipes/sql-typeorm) docs.
 
-## Description
+Link para a documentacao do [Swagger](https://docs.nestjs.com/openapi/introduction).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+  
+  ## PASSO A PASSO, ALGUNS COMANDOS BASICOS.
 
-## Installation
-
+## Instalando o npm e o nestjs cli
 ```bash
-$ npm install
+npm install -g npm
+npm insta```ll -g @nestjs/cli
+```
+## criando o projeto
+```bash
+nest new nome_do_projecto
+```
+## rodar em modo dev
+```bash
+npm run start:dev
+```
+## instalando container docker mysql
+```bash
+docker run --name nome_container -e MYSQL_ROOT_PASSWORD=senha_aqui -d mysql:latest
 ```
 
-## Running the app
-
+## rodando o container
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker start id_container
+```
+## instalando typeorm para mysql
+```bash
+npm install --save typeorm mysql2
 ```
 
-## Test
-
+## instalando o swagger
 ```bash
-# unit tests
-$ npm run test
+npm install --save @nestjs/swagger
+```
+## incluindo o swagger no main.ts
+```bash
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+const config = new DocumentBuilder()
+    .setTitle('Cats example')
+    .setDescription('The cats API description')
+    .setVersion('1.0')
+    .addTag('cats')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 ```
 
-## Support
+## gerando seu primeiro CRUD sem os arquivos de testes
+```bash
+nest g resource cliente --no-spec
+```
+**--no-spec** cria um crud sem os arquivos de testes.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## crie uma pasta database no src e inclua os arquivos com os seguintes conteúdos
+```bash
+Nome do aarquivo: database.module.ts
+conteúdo:
+import { Module } from '@nestjs/common';
+import { databaseProviders } from './database.providers';
 
-## Stay in touch
+@Module({
+  providers: [...databaseProviders],
+  exports: [...databaseProviders],
+})
+export class DatabaseModule {}
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Nome do aarquivo: database.providers.ts
+conteúdo:
+import { DataSource } from 'typeorm';
 
-## License
+export const databaseProviders = [
+  {
+    provide: 'DATA_SOURCE',
+    useFactory: async () => {
+      const dataSource = new DataSource({
+        type: 'mysql',
+        host: 'localhost',
+        port: 3306,
+        username: 'root',
+        password: 'password',
+        database: 'test',
+        entities: [__dirname + '/../**/*.entity{.ts,.js}',],
+        synchronize: true,
+      });
 
-Nest is [MIT licensed](LICENSE).
+      return dataSource.initialize();
+    },
+  },
+];
+```
+## crie um provider no seu crud conforme abaixo:
+```bash
+file: cliente.providers.ts
+conteúdo:
+import { DataSource } from 'typeorm';
+import { Cliente } from './entities/cliente.entity';
+
+export const clienteProviders = [
+  {
+    provide: 'CLIENTE_REPOSITORY',
+    useFactory: (dataSource: DataSource) => dataSource.getRepository(Cliente),
+    inject: ['DATA_SOURCE'],
+  },
+];
+```
+## altere o service de seu crud conforme abaixo:
+```bash
+// inclua o construtor
+constructor(
+    @Inject('CLIENTE_REPOSITORY')
+    private clienteRepository: Repository<Cliente>,
+  ) {}
+
+// no findAll altere:
+return this.clienteRepository.find();
+
+// no create altere:
+return this.clienteRepository.save(createClienteDto);
+
+// no findOne altere:
+return this.clienteRepository.findOne({ where: { id } });
+
+// no update altere:
+return this.clienteRepository.update(id, updateClienteDto);
+
+// no delete altere:
+return this.clienteRepository.delete(id);
+
+// obs: não esquecendo de alterar os imports conforme necessidade
+```
+## no module altere:
+```bash
+imports: [DatabaseModule],
+providers: [...clienteProviders,ClienteService,]
+```
+## na entidade inclua os campos da tabela conforme abaixo:
+```bash
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Cliente {
+@PrimaryGeneratedColumn()
+id: number;
+
+@Column({ length: 100 })
+nome: string;
+
+@Column({ length: 255 })
+email: string;
+
+@Column({ length: 11 })
+cpf: string;
+
+@Column({ length: 11 })
+fone: string;
+
+@Column({ length: 11 })
+celular: string;
+
+@Column()
+status: boolean;
+}
+```
+## no createdto e updatedto altere:
+```bash
+import { IsBoolean, IsString } from 'class-validator';
+
+@IsString()
+nome: string;
+
+@IsString()
+email: string;
+
+@IsString()
+cpf: string;
+
+@IsString()
+fone: string;
+
+@IsString()
+celular: string;
+
+@IsBoolean()
+status: boolean;
+```
+****
