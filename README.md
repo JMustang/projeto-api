@@ -115,32 +115,32 @@ export const clienteProviders = [
   },
 ];
 ```
-## altere o service de seu crud conforme abaixo:
+
+## altere o service do crud conforme abaixo:
 ```bash
 // inclua o construtor
 constructor(
-    @Inject('CLIENTE_REPOSITORY')
-    private clienteRepository: Repository<Cliente>,
+    @Inject('CLIENT_REPOSITORY')
+    private clientRepository: Repository<Client>,
   ) {}
 
-// no findAll altere:
-return this.clienteRepository.find();
-
-// no create altere:
+// create
 return this.clienteRepository.save(createClienteDto);
 
-// no findOne altere:
+// findAll 
+return this.clienteRepository.find();
+
+// findOne
 return this.clienteRepository.findOne({ where: { id } });
 
-// no update altere:
+// update
 return this.clienteRepository.update(id, updateClienteDto);
 
-// no delete altere:
+// delete
 return this.clienteRepository.delete(id);
-
-// obs: não esquecendo de alterar os imports conforme necessidade
 ```
-## no module altere:
+## Alteracoes no client module
+
 ```bash
 imports: [DatabaseModule],
 providers: [...clienteProviders,ClienteService,]
